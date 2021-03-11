@@ -58,12 +58,12 @@
 
 #### getrange；setrange
 
-* 获取指定区间范围内的值**(类似于between...and)**；
-* 设置指定区间范围内的值**(setrange key range n)**(range表示从何开始)
+* 获取指定区间范围内的值**类似于between...and**；
+* 设置指定区间范围内的值——**setrange key range n**(range表示从何开始)
 
 #### setex；setnx
 
-* 创建key时设置key的存活时间**(setex key time value)**；
+* 创建key时设置key的存活时间——**setex key time value**；
 * 如果key不存在才设置(set if not exist)
 
 #### mset；mget；msetnx(more)
@@ -89,17 +89,17 @@
 
 * 从左往右索引位置取值(lindex key n)；
 * 获取长度；
-* 删n个value**(lrem key n value)**；
-* 取n到m范围的value赋给key**(ltrim key n m)**
+* 删n个value——**lrem key n value**；
+* 取n到m范围的value赋给key——**ltrim key n m**
 
 #### rpoplpush
 
-* key1从右边pop一个元素，push进k2的左边**(rpoplpush key1 key2)**
+* key1从右边pop一个元素，push进k2的左边——**rpoplpush key1 key2**
 
 #### lset；linsert
 
-* 设置key的第n个位置的值为value**(lset key n value)**；
-* 往key的value1的 左边/右边 插入value2**(linsert key before/after value1 value2)**
+* 设置key的第n个位置的值为value——**lset key n value**；
+* 往key的value1的 左边/右边 插入value2——**linsert key before/after value1 value2**
 
 ### <span id="23">3.Set(无序集合)</span>
 
@@ -109,7 +109,7 @@ String类型的无序集合，**不允许重复**
 
 * 添加；
 * 遍历；
-* 查看是否有元素value**(sismember set value)**
+* 查看是否有元素value——**sismember set value**
 
 #### scard；srem；srandmember
 
@@ -118,9 +118,9 @@ String类型的无序集合，**不允许重复**
 
 #### srandmember；spop；smove
 
-* 从已有元素中随机抽n个元素**(srandmember set n)**；
+* 从已有元素中随机抽n个元素——**srandmember set n**；
 * 随机出栈；
-* 把key1里值value1赋给key2**(smove key1 key2 value1)**
+* 把key1里值value1赋给key2——**smove key1 key2 value1**
 
 #### 数学集合类：sdiff；sinter；sunion
 
@@ -136,12 +136,12 @@ String类型的Field和Value的映射表，类似Map<String, Object>
 
 #### hset；hget；hmset；hmget；hgetall；hdel（重要）
 
-* 设置hash k的值为键值对v c**(hset k v c)**
-* 获取k的值的键v的值c**(hget k v)**
-* 设置多个键值对**(hmset k v1 c1 v2 c2 ...)**
+* 设置hash k的值为键值对v c——**hset k v c**
+* 获取k的值的键v的值c——**hget k v**
+* 设置多个键值对——**hmset k v1 c1 v2 c2 ...**
 * 获取多个k的值的键的值
 * 获取所有vc
-* 通过v删除掉k的一组键值对**(hdel k v)**
+* 通过v删除掉k的一组键值对——**hdel k v**
 
 #### hkeys；hvals（重要）
 
@@ -155,7 +155,7 @@ String类型的Field和Value的映射表，类似Map<String, Object>
 
 #### hincrby；hincrbyfloat；hsetnx
 
-* 给c的值v加n**(hincrby k c n)**；
+* 给c的值v加n——**hincrby k c n**；
 * n为小数；
 * 给已存在的c的值赋值为v
 
@@ -167,9 +167,9 @@ String类型的有序集合，不允许重复
 
 #### zadd；zrange；zrangebyscore
 
-* 创建，添加值**(zadd zset value1 score1 value2 score2 ...)**；
+* 创建，添加值——**zadd zset value1 score1 value2 score2 ...**；
 * 遍历，加上withscores可以把score也遍历出来；
-* 找出闭区间n到m的score的值**(zrangebyscore zset n m)**(加上limit和mysql一个意思)
+* 找出闭区间n到m的score的值——**zrangebyscore zset n m**(加上limit和mysql一个意思)
 
 #### zrem；zcard；zcount；  zrank；zscore；zrevrank；  zrevrange
 
@@ -290,6 +290,7 @@ Redis会单独创建(fork)一个子进程来进行持久化，会先将数据写
   * **requirepass** 设置Redis连接密码
   * **rename-command CONFIG** 更改config命令的名字
 * **clients** 客户端
+  
   * **maxclients** 最大客户端数量 默认10000
 * **memory management** 内存管理
   * **maxmemory <bytes>** 最大内存 
