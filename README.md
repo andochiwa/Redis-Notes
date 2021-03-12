@@ -309,3 +309,105 @@ Redis会单独创建(fork)一个子进程来进行持久化，会先将数据写
   * **lazyfree-lazy-expire** 针对设置有TTL的key，达到过期时间后，被redis清理删除时是否采用lazy free机制，**建议开启**， 默认关闭
   * **lazyfree-lazy-server-del** 针对有些指令在处理已存在的key时，会带有隐式的del key操作，如果这些key是个big key，就可能导致阻塞删除的性能问题，开启此参数可以解决
   * **slave-lazy-flush** 针对slave进行全量数据同步，slave在加载master的RDB文件前，会运行flushall来清理自己的数据场景，参数设置决定是否采用异常flush机制，如果内存变动不大可开启
+
+
+
+## <span id="5">5.事务</span>
+
+* **简介** Redis的事务是可以一次执行多个命令，本质为一组命令的几何。一个事务中的所有命令都会被序列化，按顺序的串行化执行而不会被其他命令插入（一个队列中，一次性、顺序性、排他性的执行一系列命令）
+* **常用命令**
+  * **discard** 取消事务，放弃执行事务块内的所有命令
+  * **exec** 执行所有事务块内的命令
+  * **multi** 标记一个事务的开始
+  * **unwatch** 取消watch命令对所有key的监视
+  * **watch key[key ...]** 监视一个或多个key，如果在事务执行前这些key被其他命令所改动，那么事务将被中断
+* **watch监控**
+  * **悲观锁、乐观锁、CAS** 
+    * **悲观锁(Pessimistic lock)** 很悲观，每次拿数据都认为别人会修改，所以在拿数据时都会上锁，这样别人想拿这个数据就会阻塞知道它拿到数据
+    * **乐观锁(Optimistic lock)** 很乐观，每次拿数据都认为别人不会修改，**所以不会上锁**，但是在更新时会判断在此期间有没有其他人去更新这个数据，可以用版本号等机制。比较适用于读操作多的应用类型，可以提高吞吐量
+  * watch即类似于乐观锁，当watch过后，在数据更新期间被别人修改过数据，则提交事务将会中止，整个事务队列都不会被执行
+* **特性**
+  * **单独的隔离操作** 事务中所有命令都会被序列化，按顺序执行，执行过程中不会被其他命令打断
+  * **没有隔离级别的概念** 队列中的命令都没有被实际提交，因为事务提交前任何指令都不会被实际执行，所以也不存在隔离级别
+  * **不保证原子性** redis同一个事务中如果有一条命令执行失败，其他命令仍然会被执行，没有回滚
+
+
+
+## <span id="6">6.发布订阅(一般都交给专业的消息中间件去做)</span>
+
+* **简介** redis的发布订阅是进程间的一种消息通信模式，发布者(pub)发送消息，订阅者(sub)接收消息
+* **命令**
+  * **psubscribe pattern[pattern ...]** 订阅一个或多个符合给定模式的频道
+  * **pubsub subcommand[argument [argument ...]]** 查看订阅与发布系统状态
+  * **publish channel message** 将信息发送到指定频道
+  * **punsubscribe [pattern [pattenr ...]]** 退订所有给定模式的频道
+  * **subscribe channel [channel ...]** 订阅给定的一个或多个频道信息
+  * **unsubscribe [channel [channel ...]]** 退订给定的频道
+
+## 7.复制(主从复制)
+
+* **简介** 主从复制，主机数据更新后根据配置和策略，自动同步到备机的master/slaver机制，master以写为主，slaver以读为主
+
+* **作用**
+
+  * **读写分离**
+  * **容灾恢复**
+
+* **用法**
+
+  * **配从不配主** 
+  * **从库配置：slaveof主库ip主库端口**
+    * 每次与master断开之后，都需要重新配置，除非配置进配置文件中
+    * info replication
+  * **修改配置文件的细节操作**
+    * 拷贝多个redis.conf配置文件
+    * daemonize yes
+    * pid文件名字
+    * 指定端口号
+    * log文件名字
+    * Dump.rdb名字
+  * **常用使用方法**
+    * **一主二仆** 一个master两个slave
+    * **薪火相传**
+      * 上一个slave可以是下一个slave的master，Slave同样可以接受其他slaves的连接和同步请求，那么该slave作为了链条中下一个的master，可以有效减轻master的写压力
+      * 中途变更转向：会清除之前的数据，重新建立拷贝新的
+      * Slaveof 新主库ip 新主库端口
+    * **反客为主**
+      * **SLAVEOF no one** 使当前数据库停止与其他数据库的同步，转成主数据库
+
+* **复制原理**
+
+  * slave启动成功连接到master后会发送一个sync命令
+    master接到命令启动后台的存盘进程，同时收集所有接收到的用于修改数据集的命令，在后台进程执行完毕之后，master将传送整个数据文件到slave，以完成一次同步
+
+  * **全量复制** slave服务在接收到数据库文件数据后，将其存盘并加载到内存中
+  * **增量复制** master继续将新的所有收集到的修改命令依次传给slave，完成同步
+  * 只要是重新连接master，全量复制将被自动执行
+
+* **哨兵模式**
+
+  * **简介** **反客为主**的自动版，可以后台监控主机是否故障，如果故障了则根据投票数自动将从库变成主库
+  * 使用步骤
+    * 配置目录下新建sentinel.conf文件，名字必须一致
+    * **配置哨兵**
+      * **sentinel monitor**  <master-name> <ip> <redis-port> <quorum>
+      * 最后一位数字，表示主机挂掉后slave投票看让谁接替主机，得票数多少后成为主机
+    * 启动哨兵
+      * **Redis-sentinul /xxx/sentinel.conf** 配置文件目录
+  * 如果原有的master挂了，则投票从slave里新选一个master
+    如果之前的master回来了，则会变为新master的slave
+
+
+
+## 8.Java连接
+
+用到Jedis jar包
+
+```java
+public class RedisConnectionTest {
+    public static void main(String[] args){
+        Jedis jedis = new Jedis("localhost", 6379);
+        System.out.println(jedis.ping());
+    }
+}
+```
